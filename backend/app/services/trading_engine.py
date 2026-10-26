@@ -6,6 +6,7 @@ from app.models.portfolio import Portfolio, Holding, CashTransaction, PortfolioT
 from app.models.order import TradeOrder, OrderSide, OrderType, OrderStatus
 from app.schemas.order import OrderCreate
 from app.services.market_data import market_data_provider
+from app.services.audit_service import log_audit_event
 
 class TradingEngine:
     def execute_order(
@@ -32,10 +33,10 @@ class TradingEngine:
             Portfolio.user_id == user_id
         ).first()
 
-        if not portfolio:
+        if not portfolio or not portfolio.is_active:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Portfolio not found or access denied"
+                detail="Portfolio not found, inactive, or access denied"
             )
 
         if portfolio.type != PortfolioType.VIRTUAL_TRADING:
@@ -70,6 +71,15 @@ class TradingEngine:
             self._fill_market_order(db, portfolio, order, current_price)
         elif order_data.type == OrderType.LIMIT:
             self._process_limit_order(db, portfolio, order, current_price)
+
+        log_audit_event(
+            db=db,
+            user_id=user_id,
+            action="TRADE_ORDER_PLACED",
+            resource_type="ORDER",
+            resource_id=order.id,
+            details=f"Placed {order.type} {order.side} order for {order.quantity} {order.ticker} (Status: {order.status})"
+        )
 
         db.commit()
         db.refresh(order)
@@ -132,10 +142,19 @@ class TradingEngine:
                 Holding.ticker == order.ticker
             ).first()
 
-            if not holding or holding.quantity < qty:
-                available = holding.quantity if holding else 0.0
+            pending_sells = db.query(TradeOrder).filter(
+                TradeOrder.portfolio_id == portfolio.id,
+                TradeOrder.ticker == order.ticker,
+                TradeOrder.status == OrderStatus.PENDING,
+                TradeOrder.side == OrderSide.SELL,
+                TradeOrder.id != order.id
+            ).all()
+            committed_limit_sell_qty = sum(o.quantity for o in pending_sells)
+            available_qty = (holding.quantity - committed_limit_sell_qty) if holding else 0.0
+
+            if not holding or available_qty < qty:
                 order.status = OrderStatus.REJECTED
-                order.error_reason = f"Insufficient shares to sell: Requested {qty}, Available {available}"
+                order.error_reason = f"Insufficient shares to sell: Requested {qty}, Available {available_qty} (Committed to limit orders: {committed_limit_sell_qty})"
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail=order.error_reason
@@ -312,6 +331,14 @@ class TradingEngine:
             db.add(tx)
 
         order.status = OrderStatus.CANCELLED
+        log_audit_event(
+            db=db,
+            user_id=user_id,
+            action="TRADE_ORDER_CANCELLED",
+            resource_type="ORDER",
+            resource_id=order.id,
+            details=f"Cancelled {order.type} {order.side} order for {order.quantity} {order.ticker}"
+        )
         db.commit()
         db.refresh(order)
         return order
@@ -353,11 +380,28 @@ class TradingEngine:
         ).all()
 
         filled_orders = []
+        modified_orders = []
         now = datetime.now(timezone.utc)
 
         for order in pending_orders:
             portfolio = db.query(Portfolio).filter(Portfolio.id == order.portfolio_id).first()
-            if not portfolio:
+            if not portfolio or not portfolio.is_active:
+                if portfolio and order.side == OrderSide.BUY and order.limit_price:
+                    refund = round(order.quantity * order.limit_price, 2)
+                    portfolio.reserved_cash = max(0.0, round(portfolio.reserved_cash - refund, 2))
+                    portfolio.virtual_cash_balance = round(portfolio.virtual_cash_balance + refund, 2)
+                    tx = CashTransaction(
+                        portfolio_id=portfolio.id,
+                        order_id=order.id,
+                        amount=refund,
+                        balance_after=portfolio.virtual_cash_balance,
+                        transaction_type="ESCROW_REFUND",
+                        description=f"Escrow release for pending Limit BUY on inactive portfolio ({order.quantity} {order.ticker})"
+                    )
+                    db.add(tx)
+                order.status = OrderStatus.CANCELLED
+                order.error_reason = "Portfolio deleted or inactive"
+                modified_orders.append(order)
                 continue
 
             if order.side == OrderSide.BUY:
@@ -404,6 +448,16 @@ class TradingEngine:
                     order.execution_price = current_price
                     order.executed_at = now
                     filled_orders.append(order)
+                    modified_orders.append(order)
+
+                    log_audit_event(
+                        db=db,
+                        user_id=portfolio.user_id,
+                        action="TRADE_ORDER_FILLED",
+                        resource_type="ORDER",
+                        resource_id=order.id,
+                        details=f"Limit BUY order filled for {order.quantity} {order.ticker} @ ${current_price:.2f}"
+                    )
 
             elif order.side == OrderSide.SELL:
                 if current_price >= order.limit_price:
@@ -416,6 +470,15 @@ class TradingEngine:
                     if not holding or holding.quantity < qty:
                         order.status = OrderStatus.REJECTED
                         order.error_reason = "Insufficient shares to fulfill limit sell at execution time"
+                        modified_orders.append(order)
+                        log_audit_event(
+                            db=db,
+                            user_id=portfolio.user_id,
+                            action="TRADE_ORDER_REJECTED",
+                            resource_type="ORDER",
+                            resource_id=order.id,
+                            details=f"Limit SELL order rejected: insufficient shares at execution time ({order.quantity} {order.ticker})"
+                        )
                         continue
 
                     proceeds = round(qty * current_price, 2)
@@ -439,10 +502,20 @@ class TradingEngine:
                     order.execution_price = current_price
                     order.executed_at = now
                     filled_orders.append(order)
+                    modified_orders.append(order)
 
-        if filled_orders:
+                    log_audit_event(
+                        db=db,
+                        user_id=portfolio.user_id,
+                        action="TRADE_ORDER_FILLED",
+                        resource_type="ORDER",
+                        resource_id=order.id,
+                        details=f"Limit SELL order filled for {order.quantity} {order.ticker} @ ${current_price:.2f}"
+                    )
+
+        if modified_orders:
             db.commit()
-            for o in filled_orders:
+            for o in modified_orders:
                 db.refresh(o)
 
         return filled_orders

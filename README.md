@@ -17,7 +17,7 @@ The system is architected across functional divisions solving the 7 critical par
 | **Vector RAG & Graph** | **ML / AI Intelligence 1** | Text chunking with token overlap, normalized vector embeddings, cosine similarity search, and relational supply-chain knowledge graph (e.g. `TSMC -> SUPPLIER -> NVDA`). |
 | **Explainable AI Agent** | **ML / AI Intelligence 2** | "Explain Impact" synthesis engine with prompt injection defense, strict citation anchoring, grounded abstention on empty context, Server-Sent Events (SSE) token streaming, and AI Thesis Reflection. |
 | **Modern Financial UI** | **High Quality UI** | Dark-mode interface built with React, Vite, Tailwind CSS, Lucide icons, and modern `<dialog closedby="any">` modals with light-dismiss fallbacks per modern web guidance. |
-| **Rigorous Testing** | **Testing Team (3 Suites)** | 19 comprehensive automated tests covering ledger invariants, isolation, risk metrics, anomaly triggers, RAG citations, limit order matching, and full end-to-end user journeys. |
+| **Rigorous Testing** | **Testing Team (3 Suites)** | 29 comprehensive automated tests covering ledger invariants, isolation, risk metrics, anomaly triggers, RAG citations, limit order matching, audit logs, watchlists, profile settings, and full end-to-end user journeys. |
 
 ---
 
@@ -42,7 +42,7 @@ cd backend
 # Install dependencies
 python -m pip install -r requirements.txt
 
-# Run full test suite (19 tests)
+# Run full test suite (29 tests)
 python -m pytest -v
 
 # Run the backend API server (http://localhost:8000)

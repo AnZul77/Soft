@@ -7,6 +7,11 @@ import AnomalyAlertsFeed from './components/AnomalyAlertsFeed';
 import ExplainImpactModal from './components/ExplainImpactModal';
 import RiskAnalyticsCard from './components/RiskAnalyticsCard';
 import InvestmentJournal from './components/InvestmentJournal';
+import StockDetailModal from './components/StockDetailModal';
+import WatchlistsTab from './components/WatchlistsTab';
+import ProfileSettingsModal from './components/ProfileSettingsModal';
+import AIResearchModal from './components/AIResearchModal';
+import AlertRuleModal from './components/AlertRuleModal';
 import { api, setAuthToken, getAuthToken } from './api';
 import { 
   Sparkles, 
@@ -52,6 +57,13 @@ export default function App() {
   const [manualTicker, setManualTicker] = useState('AAPL');
   const [manualQty, setManualQty] = useState('50');
   const [manualCost, setManualCost] = useState('180');
+
+  // New feature modals state (FR-02, FR-06, FR-11, FR-16, FR-18)
+  const [isChartOpen, setIsChartOpen] = useState(false);
+  const [selectedChartTicker, setSelectedChartTicker] = useState('NVDA');
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isAIResearchOpen, setIsAIResearchOpen] = useState(false);
+  const [isAlertRulesOpen, setIsAlertRulesOpen] = useState(false);
 
   // Initial Auth Check
   useEffect(() => {
@@ -217,6 +229,30 @@ export default function App() {
     setIsTradeModalOpen(true);
   };
 
+  const openChartForTicker = (ticker) => {
+    setSelectedChartTicker(ticker);
+    setIsChartOpen(true);
+  };
+
+  const handleRenamePortfolio = async (id, newName) => {
+    try {
+      await api.updatePortfolio(id, { name: newName });
+      await refreshAllData();
+    } catch (err) {
+      alert("Error renaming portfolio: " + err.message);
+    }
+  };
+
+  const handleDeletePortfolio = async (id) => {
+    try {
+      await api.deletePortfolio(id);
+      setActivePortfolio(null);
+      await refreshAllData();
+    } catch (err) {
+      alert("Error deleting portfolio: " + err.message);
+    }
+  };
+
   if (authLoading) {
     return (
       <div className="min-h-screen bg-zinc-950 flex items-center justify-center text-zinc-400 font-mono text-xs">
@@ -323,6 +359,9 @@ export default function App() {
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         onLogout={handleLogout}
+        onOpenProfile={() => setIsProfileOpen(true)}
+        onOpenAIResearch={() => setIsAIResearchOpen(true)}
+        onOpenAlertRules={() => setIsAlertRulesOpen(true)}
       />
 
       {/* Main Container */}
@@ -337,6 +376,9 @@ export default function App() {
               onExplainHolding={(ticker) => openExplainForTicker(ticker)}
               onOpenAddManual={() => setIsAddManualOpen(true)}
               onDeleteManualHolding={handleDeleteManualHolding}
+              onViewChart={openChartForTicker}
+              onRenamePortfolio={handleRenamePortfolio}
+              onDeletePortfolio={handleDeletePortfolio}
             />
 
             {/* Quick Anomaly Alerts preview */}
@@ -491,6 +533,14 @@ export default function App() {
           </div>
         )}
 
+        {activeTab === 'watchlists' && (
+          <WatchlistsTab
+            onViewChart={openChartForTicker}
+            onTradeTicker={openTradeForTicker}
+            onExplainTicker={openExplainForTicker}
+          />
+        )}
+
         {activeTab === 'market' && (
           <MarketWatch
             quotes={quotes}
@@ -498,6 +548,7 @@ export default function App() {
             onAnomalyInjected={refreshAllData}
             onExplainTicker={(ticker) => openExplainForTicker(ticker)}
             onTradeTicker={openTradeForTicker}
+            onViewChart={openChartForTicker}
           />
         )}
 
@@ -635,6 +686,35 @@ export default function App() {
           </div>
         </div>
       )}
+
+      {/* Interactive Stock History & Candlestick Modal (FR-06) */}
+      <StockDetailModal
+        isOpen={isChartOpen}
+        onClose={() => setIsChartOpen(false)}
+        ticker={selectedChartTicker}
+        onTradeTicker={openTradeForTicker}
+      />
+
+      {/* User Profile & Risk Preferences Modal (FR-02, FR-11, FR-25) */}
+      <ProfileSettingsModal
+        isOpen={isProfileOpen}
+        onClose={() => setIsProfileOpen(false)}
+        user={user}
+        onProfileUpdated={(updated) => setUser(prev => ({ ...prev, ...updated }))}
+      />
+
+      {/* AI Semantic Research Assistant Modal (FR-16) */}
+      <AIResearchModal
+        isOpen={isAIResearchOpen}
+        onClose={() => setIsAIResearchOpen(false)}
+        onTrade={openTradeForTicker}
+      />
+
+      {/* Alert Rule Configuration Modal (FR-18) */}
+      <AlertRuleModal
+        isOpen={isAlertRulesOpen}
+        onClose={() => setIsAlertRulesOpen(false)}
+      />
     </div>
   );
 }

@@ -45,3 +45,18 @@ class AnomalyInjectionRequest(BaseModel):
     price_change_pct: float = Field(..., description="E.g. -0.08 for -8% drop, or +0.10 for +10% spike")
     headline: Optional[str] = Field(None, description="Optional news headline triggering the anomaly")
     content: Optional[str] = Field(None, description="Optional news article body")
+
+class CandleItem(BaseModel):
+    timestamp: datetime
+    open: float
+    high: float
+    low: float
+    close: float
+    volume: float
+
+class PriceHistoryResponse(BaseModel):
+    ticker: str
+    company_name: Optional[str] = None
+    period: str = "30d"
+    current_price: float
+    candles: List[CandleItem]

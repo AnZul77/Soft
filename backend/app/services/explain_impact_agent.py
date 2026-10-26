@@ -131,7 +131,17 @@ class ExplainImpactAgent:
             "have structurally shifted or if this represents short-term liquidity noise."
         )
 
-        full_analysis = "\n\n".join(analysis_paragraphs)
+        template_analysis = "\n\n".join(analysis_paragraphs)
+        from app.services.llm_client import call_live_llm
+        llm_prompt = (
+            f"Asset: {ticker}\n"
+            f"Event Context: {clean_event} (Direction: {sentiment}, Move: {price_drop:+.2f}%)\n"
+            f"Grounded Facts & Portfolio Context:\n{template_analysis}\n\n"
+            f"Synthesize an objective, grounded financial explanation for the retail investor referencing the portfolio exposure and market facts above. "
+            f"Strictly avoid speculative hype and do not provide direct buy/sell advice."
+        )
+        live_res = call_live_llm(llm_prompt)
+        full_analysis = live_res if live_res else template_analysis
 
         headline = (
             f"{ticker} Volatility Event: {exposure_pct}% Portfolio Exposure"

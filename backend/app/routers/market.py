@@ -3,7 +3,9 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.market import NewsArticle
-from app.schemas.market import QuoteResponse, NewsArticleResponse, AnomalyInjectionRequest
+from app.schemas.market import (
+    QuoteResponse, NewsArticleResponse, AnomalyInjectionRequest, PriceHistoryResponse
+)
 from app.services.market_data import market_data_provider
 
 router = APIRouter(prefix="/market", tags=["Market Data & Ingestion"])
@@ -21,6 +23,14 @@ def get_single_quote(ticker: str, db: Session = Depends(get_db)):
             detail=f"Quote for ticker '{ticker}' not found"
         )
     return quote
+
+@router.get("/history/{ticker}", response_model=PriceHistoryResponse)
+def get_price_history(ticker: str, period: str = "30d", db: Session = Depends(get_db)):
+    """FR-06: Historical price / candle series for charting and technical analysis."""
+    try:
+        return market_data_provider.get_history(ticker=ticker, period=period, db=db)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
 @router.post("/anomalies/inject", response_model=QuoteResponse)
 def inject_market_anomaly(req: AnomalyInjectionRequest, db: Session = Depends(get_db)):

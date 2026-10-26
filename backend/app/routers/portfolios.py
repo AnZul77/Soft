@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.user import User
 from app.schemas.portfolio import (
-    PortfolioCreate, PortfolioResponse, PortfolioValuation,
+    PortfolioCreate, PortfolioUpdate, PortfolioResponse, PortfolioValuation,
     HoldingCreate, HoldingUpdate, HoldingResponse
 )
 from app.services.auth_service import get_current_user
@@ -34,6 +34,15 @@ def get_portfolio(
     db: Session = Depends(get_db)
 ):
     return portfolio_service.get_portfolio(db, current_user.id, portfolio_id)
+
+@router.put("/{portfolio_id}", response_model=PortfolioResponse)
+def update_portfolio(
+    portfolio_id: str,
+    portfolio_in: PortfolioUpdate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    return portfolio_service.update_portfolio(db, current_user.id, portfolio_id, portfolio_in)
 
 @router.delete("/{portfolio_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_portfolio(

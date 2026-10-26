@@ -19,6 +19,7 @@ class JournalEntryUpdate(BaseModel):
     target_price: Optional[float] = None
     confidence_rating: Optional[int] = Field(None, ge=1, le=5)
     review_date: Optional[datetime] = None
+    is_archived: Optional[bool] = None
 
 class JournalEntryResponse(BaseModel):
     id: str
@@ -32,6 +33,7 @@ class JournalEntryResponse(BaseModel):
     confidence_rating: int
     review_date: Optional[datetime] = None
     ai_reflection: Optional[str] = None
+    is_archived: bool = False
     created_at: datetime
     updated_at: datetime
 

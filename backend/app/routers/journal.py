@@ -1,6 +1,6 @@
-from typing import List
+from typing import List, Optional
 from datetime import datetime
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.user import User
@@ -50,12 +50,16 @@ def create_journal_entry(
 
 @router.get("/", response_model=List[JournalEntryResponse])
 def get_user_journal_entries(
+    is_archived: Optional[bool] = Query(None),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    return db.query(InvestmentJournalEntry).filter(
+    query = db.query(InvestmentJournalEntry).filter(
         InvestmentJournalEntry.user_id == current_user.id
-    ).order_by(InvestmentJournalEntry.created_at.desc()).all()
+    )
+    if is_archived is not None:
+        query = query.filter(InvestmentJournalEntry.is_archived == is_archived)
+    return query.order_by(InvestmentJournalEntry.created_at.desc()).all()
 
 @router.get("/{entry_id}", response_model=JournalEntryResponse)
 def get_journal_entry(
@@ -97,7 +101,28 @@ def update_journal_entry(
         entry.confidence_rating = entry_in.confidence_rating
     if entry_in.review_date is not None:
         entry.review_date = entry_in.review_date
+    if entry_in.is_archived is not None:
+        entry.is_archived = entry_in.is_archived
 
+    db.commit()
+    db.refresh(entry)
+    return entry
+
+@router.put("/{entry_id}/archive", response_model=JournalEntryResponse)
+def toggle_journal_archive(
+    entry_id: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """FR-22: Toggles the archived status of a journal entry."""
+    entry = db.query(InvestmentJournalEntry).filter(
+        InvestmentJournalEntry.id == entry_id,
+        InvestmentJournalEntry.user_id == current_user.id
+    ).first()
+    if not entry:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Journal entry not found")
+
+    entry.is_archived = not entry.is_archived
     db.commit()
     db.refresh(entry)
     return entry

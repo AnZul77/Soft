@@ -23,7 +23,7 @@ class TradeOrder(Base):
     __tablename__ = "trade_orders"
 
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    portfolio_id = Column(String(36), ForeignKey("portfolios.id", ondelete="CASCADE"), nullable=False, index=True)
+    portfolio_id = Column(String(36), ForeignKey("portfolios.id", ondelete="SET NULL"), nullable=True, index=True)
     ticker = Column(String(10), nullable=False, index=True)
     side = Column(SQLEnum(OrderSide), nullable=False)
     type = Column(SQLEnum(OrderType), nullable=False)

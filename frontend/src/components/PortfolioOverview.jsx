@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   DollarSign, 
   TrendingUp, 
@@ -9,7 +9,11 @@ import {
   Sparkles, 
   Plus, 
   Trash2,
-  AlertCircle
+  AlertCircle,
+  BarChart2,
+  Edit3,
+  Check,
+  X
 } from 'lucide-react';
 
 export default function PortfolioOverview({ 
@@ -18,8 +22,13 @@ export default function PortfolioOverview({
   onOpenTrade, 
   onExplainHolding, 
   onOpenAddManual, 
-  onDeleteManualHolding 
+  onDeleteManualHolding,
+  onViewChart,
+  onRenamePortfolio,
+  onDeletePortfolio
 }) {
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [editedName, setEditedName] = useState('');
   if (!portfolio) {
     return (
       <div className="text-center py-16 bg-zinc-900/40 border border-zinc-800 rounded-2xl">
@@ -112,9 +121,69 @@ export default function PortfolioOverview({
 
       {/* Holdings Section */}
       <div className="bg-zinc-900/60 border border-zinc-800 rounded-2xl overflow-hidden shadow-sm">
-        <div className="px-6 py-4 border-b border-zinc-800 flex items-center justify-between">
+        <div className="px-6 py-4 border-b border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <h2 className="text-sm font-bold text-white uppercase tracking-wider">Asset Holdings Breakdown</h2>
+            {isEditingName ? (
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={editedName}
+                  onChange={(e) => setEditedName(e.target.value)}
+                  className="bg-zinc-950 border border-zinc-700 rounded-lg px-2.5 py-1 text-xs text-white font-bold focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  autoFocus
+                />
+                <button
+                  onClick={async () => {
+                    if (editedName.trim() && onRenamePortfolio) {
+                      await onRenamePortfolio(portfolio.id, editedName.trim());
+                    }
+                    setIsEditingName(false);
+                  }}
+                  title="Save Name"
+                  className="p-1 rounded bg-indigo-600 hover:bg-indigo-500 text-white transition"
+                >
+                  <Check className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  onClick={() => setIsEditingName(false)}
+                  title="Cancel"
+                  className="p-1 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-400 transition"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <h2 className="text-sm font-bold text-white uppercase tracking-wider">
+                  {portfolio.name} — Asset Breakdown
+                </h2>
+                {onRenamePortfolio && (
+                  <button
+                    onClick={() => {
+                      setEditedName(portfolio.name);
+                      setIsEditingName(true);
+                    }}
+                    title="Rename Portfolio"
+                    className="p-1 rounded text-zinc-400 hover:text-white hover:bg-zinc-800 transition"
+                  >
+                    <Edit3 className="w-3.5 h-3.5" />
+                  </button>
+                )}
+                {onDeletePortfolio && (
+                  <button
+                    onClick={() => {
+                      if (confirm(`Are you sure you want to delete portfolio "${portfolio.name}"? Historical orders and cash transactions will remain safely archived.`)) {
+                        onDeletePortfolio(portfolio.id);
+                      }
+                    }}
+                    title="Soft Delete Portfolio"
+                    className="p-1 rounded text-zinc-500 hover:text-rose-400 hover:bg-zinc-800 transition"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+            )}
             <p className="text-xs text-zinc-400 mt-0.5">Real-time market valuation with fallback validation</p>
           </div>
 
@@ -206,6 +275,17 @@ export default function PortfolioOverview({
 
                       <td className="py-3.5 px-6 text-right">
                         <div className="flex items-center justify-end gap-2 font-sans">
+                          {onViewChart && (
+                            <button
+                              onClick={() => onViewChart(h.ticker)}
+                              title="View Interactive Price Chart"
+                              className="px-2.5 py-1 rounded-md bg-zinc-800/80 hover:bg-zinc-700 border border-zinc-700/60 text-zinc-300 text-[11px] font-medium transition flex items-center gap-1"
+                            >
+                              <BarChart2 className="w-3 h-3 text-cyan-400" />
+                              Chart
+                            </button>
+                          )}
+
                           <button
                             onClick={() => onExplainHolding(h.ticker)}
                             title="Explain Impact with AI"

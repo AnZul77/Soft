@@ -8,7 +8,11 @@ import {
   BarChart3, 
   PlusCircle, 
   LogOut,
-  Sparkles
+  Sparkles,
+  Bookmark,
+  Bell,
+  Bot,
+  User
 } from 'lucide-react';
 
 export default function Navbar({ 
@@ -19,7 +23,10 @@ export default function Navbar({
   onOpenCreatePortfolio, 
   activeTab, 
   setActiveTab, 
-  onLogout 
+  onLogout,
+  onOpenProfile,
+  onOpenAIResearch,
+  onOpenAlertRules
 }) {
   return (
     <header className="border-b border-zinc-800 bg-zinc-950/80 backdrop-blur-md sticky top-0 z-40">
@@ -65,6 +72,17 @@ export default function Navbar({
               Trade Desk
             </button>
             <button
+              onClick={() => setActiveTab('watchlists')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5 ${
+                activeTab === 'watchlists'
+                  ? 'bg-zinc-800 text-white shadow-sm'
+                  : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/40'
+              }`}
+            >
+              <Bookmark className="w-3.5 h-3.5" />
+              Watchlists
+            </button>
+            <button
               onClick={() => setActiveTab('market')}
               className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5 ${
                 activeTab === 'market'
@@ -101,6 +119,29 @@ export default function Navbar({
 
           {/* Right Controls */}
           <div className="flex items-center gap-3">
+            {/* AI Research Button */}
+            {onOpenAIResearch && (
+              <button
+                onClick={onOpenAIResearch}
+                title="AI Research Assistant (FR-16)"
+                className="px-2.5 py-1.5 rounded-lg bg-indigo-950/60 hover:bg-indigo-900/80 border border-indigo-700/60 text-indigo-300 text-xs font-semibold flex items-center gap-1.5 transition"
+              >
+                <Bot className="w-3.5 h-3.5 text-indigo-400" />
+                <span className="hidden xl:inline">AI Research</span>
+              </button>
+            )}
+
+            {/* Alert Rules Button */}
+            {onOpenAlertRules && (
+              <button
+                onClick={onOpenAlertRules}
+                title="Alert Rule Configurations (FR-18)"
+                className="p-1.5 text-zinc-400 hover:text-amber-400 hover:bg-zinc-800 rounded-lg transition"
+              >
+                <Bell className="w-4 h-4" />
+              </button>
+            )}
+
             {/* Portfolio Selector */}
             {portfolios.length > 0 && (
               <div className="flex items-center gap-2">
@@ -141,9 +182,16 @@ export default function Navbar({
 
             {/* User Profile & Logout */}
             <div className="flex items-center gap-2 pl-2 border-l border-zinc-800">
-              <span className="text-xs text-zinc-400 hidden sm:inline-block">
-                {user?.full_name || user?.email}
-              </span>
+              <button
+                onClick={onOpenProfile}
+                title="Profile & Risk Preferences (FR-02/11/25)"
+                className="flex items-center gap-1.5 text-xs text-zinc-300 hover:text-white hover:bg-zinc-800 px-2 py-1 rounded-lg transition"
+              >
+                <User className="w-3.5 h-3.5 text-zinc-400" />
+                <span className="hidden sm:inline-block max-w-[120px] truncate">
+                  {user?.full_name || user?.email}
+                </span>
+              </button>
               <button
                 onClick={onLogout}
                 title="Sign out"

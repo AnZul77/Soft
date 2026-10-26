@@ -53,6 +53,7 @@ def get_cash_transactions(
 @router.post("/match-orders", response_model=List[OrderResponse])
 def match_orders(
     ticker: Optional[str] = None,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """Triggers limit order matching against current market quotes."""

@@ -7,7 +7,9 @@ import {
   Target, 
   Calendar, 
   Star,
-  CheckCircle2
+  CheckCircle2,
+  Archive,
+  ArchiveRestore
 } from 'lucide-react';
 import { api } from '../api';
 
@@ -21,6 +23,7 @@ export default function InvestmentJournal({ portfolio, quotes }) {
   const [confidence, setConfidence] = useState(4);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [reflectingId, setReflectingId] = useState(null);
+  const [tabFilter, setTabFilter] = useState('active'); // 'active' or 'archived'
 
   const loadEntries = () => {
     api.getJournalEntries()
@@ -31,6 +34,15 @@ export default function InvestmentJournal({ portfolio, quotes }) {
   useEffect(() => {
     loadEntries();
   }, []);
+
+  const handleToggleArchive = async (entry) => {
+    try {
+      await api.archiveJournalEntry(entry.id, !entry.is_archived);
+      loadEntries();
+    } catch (err) {
+      alert("Archive update failed: " + err.message);
+    }
+  };
 
   const handleCreate = async (e) => {
     e.preventDefault();
@@ -173,23 +185,54 @@ export default function InvestmentJournal({ portfolio, quotes }) {
 
       {/* Journal Entries List */}
       <div className="space-y-4">
-        <h3 className="text-sm font-bold text-white uppercase tracking-wider">Recorded Theses & Reflection Log</h3>
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-bold text-white uppercase tracking-wider">Recorded Theses & Reflection Log</h3>
+          <div className="flex items-center gap-1 bg-zinc-950 p-1 rounded-xl border border-zinc-800">
+            <button
+              type="button"
+              onClick={() => setTabFilter('active')}
+              className={`px-3 py-1 rounded-lg text-xs font-semibold transition ${
+                tabFilter === 'active' ? 'bg-indigo-600 text-white shadow-sm' : 'text-zinc-400 hover:text-white'
+              }`}
+            >
+              Active ({entries.filter(e => !e.is_archived).length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setTabFilter('archived')}
+              className={`px-3 py-1 rounded-lg text-xs font-semibold transition ${
+                tabFilter === 'archived' ? 'bg-indigo-600 text-white shadow-sm' : 'text-zinc-400 hover:text-white'
+              }`}
+            >
+              Archived ({entries.filter(e => e.is_archived).length})
+            </button>
+          </div>
+        </div>
 
-        {entries.length === 0 ? (
+        {entries.filter(e => tabFilter === 'archived' ? e.is_archived : !e.is_archived).length === 0 ? (
           <div className="text-center py-12 bg-zinc-900/40 border border-zinc-800 rounded-2xl">
-            <p className="text-zinc-400 text-xs">No thesis entries logged yet. Record your investment hypotheses above.</p>
+            <p className="text-zinc-400 text-xs">
+              {tabFilter === 'archived' ? 'No archived theses found.' : 'No active thesis entries logged yet.'}
+            </p>
           </div>
         ) : (
-          entries.map((entry) => (
+          entries.filter(e => tabFilter === 'archived' ? e.is_archived : !e.is_archived).map((entry) => (
             <div 
               key={entry.id} 
-              className="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-5 shadow-sm space-y-4"
+              className={`bg-zinc-900/60 border rounded-2xl p-5 shadow-sm space-y-4 ${
+                entry.is_archived ? 'border-zinc-800/40 opacity-75' : 'border-zinc-800'
+              }`}
             >
               <div className="flex items-start justify-between">
                 <div>
                   <div className="flex items-center gap-2">
                     <span className="font-bold text-base text-white font-mono">{entry.ticker}</span>
                     <span className="text-xs font-semibold text-zinc-300">{entry.thesis_title}</span>
+                    {entry.is_archived && (
+                      <span className="text-[9px] font-mono uppercase px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400 border border-zinc-700">
+                        ARCHIVED
+                      </span>
+                    )}
                   </div>
                   <div className="flex items-center gap-3 text-[11px] text-zinc-500 font-mono mt-1">
                     <span>Logged: {new Date(entry.created_at).toLocaleDateString()}</span>
@@ -208,6 +251,13 @@ export default function InvestmentJournal({ portfolio, quotes }) {
                   >
                     <Sparkles className={`w-3.5 h-3.5 text-indigo-400 ${reflectingId === entry.id ? 'animate-spin' : ''}`} />
                     {reflectingId === entry.id ? 'Reflecting...' : 'AI Thesis Reflection'}
+                  </button>
+                  <button
+                    onClick={() => handleToggleArchive(entry)}
+                    title={entry.is_archived ? "Restore to active" : "Archive thesis"}
+                    className="p-1.5 text-zinc-400 hover:text-amber-400 hover:bg-zinc-800 rounded-lg transition"
+                  >
+                    {entry.is_archived ? <ArchiveRestore className="w-4 h-4" /> : <Archive className="w-4 h-4" />}
                   </button>
                   <button
                     onClick={() => handleDelete(entry.id)}

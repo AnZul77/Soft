@@ -5,6 +5,8 @@ from app.models.market import Security, QuoteCache, NewsArticle, NewsEmbedding
 from app.models.company_graph import CompanyRelationship
 from app.models.alert import AlertRule, AlertNotification, AlertStatus
 from app.models.journal import InvestmentJournalEntry
+from app.models.watchlist import Watchlist, WatchlistItem
+from app.models.audit import AuditLog
 
 __all__ = [
     "User",
@@ -24,5 +26,8 @@ __all__ = [
     "AlertRule",
     "AlertNotification",
     "AlertStatus",
-    "InvestmentJournalEntry"
+    "InvestmentJournalEntry",
+    "Watchlist",
+    "WatchlistItem",
+    "AuditLog"
 ]

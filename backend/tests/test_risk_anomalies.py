@@ -85,7 +85,7 @@ def test_anomaly_injection_and_affected_portfolio_detection(client, auth_headers
     assert inj_res.json()["ticker"] == "TSMC"
 
     # 2. Trigger Consolidated Anomaly Scan
-    scan_res = client.post("/api/v1/risk-anomalies/anomalies/scan")
+    scan_res = client.post("/api/v1/risk-anomalies/anomalies/scan", headers=auth_headers)
     assert scan_res.status_code == 200
     alerts = scan_res.json()
     assert len(alerts) >= 1

@@ -65,7 +65,7 @@ def test_complete_platform_end_to_end_user_journey(client):
     assert inj_res.status_code == 200
 
     # 8. Run Anomaly Scanner
-    scan_res = client.post("/api/v1/risk-anomalies/anomalies/scan")
+    scan_res = client.post("/api/v1/risk-anomalies/anomalies/scan", headers=headers)
     assert scan_res.status_code == 200
 
     # 9. Verify Notification Delivered to User

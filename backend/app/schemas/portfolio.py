@@ -8,6 +8,10 @@ class PortfolioCreate(BaseModel):
     type: PortfolioType = PortfolioType.VIRTUAL_TRADING
     initial_cash: Optional[float] = Field(default=100000.0, ge=0.0)
 
+class PortfolioUpdate(BaseModel):
+    name: Optional[str] = Field(None, min_length=1, max_length=100)
+    is_active: Optional[bool] = None
+
 class PortfolioResponse(BaseModel):
     id: str
     user_id: str
@@ -16,6 +20,7 @@ class PortfolioResponse(BaseModel):
     base_currency: str
     virtual_cash_balance: float
     reserved_cash: float
+    is_active: bool = True
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)

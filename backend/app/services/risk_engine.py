@@ -70,11 +70,24 @@ class RiskEngine:
             portfolio_beta += w * asset_beta
 
         # 3. Portfolio Annualized Volatility
-        # Approximated via asset-weighted volatility
-        portfolio_vol = 0.0
-        for item, w in zip(holding_values, weights):
-            asset_vol = ASSET_VOLATILITIES.get(item["ticker"], 0.25)
-            portfolio_vol += w * asset_vol
+        # Modern Portfolio Theory variance accounting for diversification:
+        # Var(P) = sum_i sum_j w_i w_j cov(i, j) = sum_i sum_j w_i w_j sigma_i sigma_j rho_ij
+        port_variance = 0.0
+        for i, item_i in enumerate(holding_values):
+            w_i = weights[i]
+            vol_i = ASSET_VOLATILITIES.get(item_i["ticker"], 0.25)
+            for j, item_j in enumerate(holding_values):
+                w_j = weights[j]
+                vol_j = ASSET_VOLATILITIES.get(item_j["ticker"], 0.25)
+                if i == j:
+                    rho = 1.0
+                elif item_i["ticker"] == "SPY" or item_j["ticker"] == "SPY":
+                    rho = 0.65
+                else:
+                    rho = 0.50  # Realistic inter-asset correlation reflecting portfolio diversification
+                port_variance += w_i * w_j * vol_i * vol_j * rho
+
+        portfolio_vol = math.sqrt(max(0.0, port_variance))
 
         # 4. Parametric Value at Risk (VaR 95% 1-day)
         # 1.645 * daily_std * portfolio_value

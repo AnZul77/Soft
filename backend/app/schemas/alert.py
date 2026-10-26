@@ -8,6 +8,12 @@ class AlertRuleCreate(BaseModel):
     threshold_pct: float = 0.08
     window_minutes: float = 15.0
 
+class AlertRuleUpdate(BaseModel):
+    ticker: Optional[str] = None
+    threshold_pct: Optional[float] = None
+    window_minutes: Optional[float] = None
+    is_active: Optional[bool] = None
+
 class AlertRuleResponse(BaseModel):
     id: str
     user_id: str

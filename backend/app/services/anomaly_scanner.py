@@ -23,7 +23,7 @@ class AnomalyScanner:
 
                 for h in affected_holdings:
                     portfolio = db.query(Portfolio).filter(Portfolio.id == h.portfolio_id).first()
-                    if not portfolio:
+                    if not portfolio or not portfolio.is_active:
                         continue
 
                     # Calculate exposure

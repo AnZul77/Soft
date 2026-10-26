@@ -9,6 +9,7 @@ from app.schemas.ai import (
 from app.services.auth_service import get_current_user
 from app.services.explain_impact_agent import explain_impact_agent, sanitize_input
 from app.services.rag_engine import rag_engine
+from app.services.llm_client import call_live_llm
 
 router = APIRouter(prefix="/ai", tags=["AI & Explainable RAG"])
 
@@ -61,11 +62,17 @@ def semantic_research(
         )
 
     top_c = citations[0]
-    answer = (
-        f"Based on recent reporting from {top_c.source} (\"{top_c.title}\"): "
-        f"{top_c.snippet} "
-        f"Market participants are evaluating ongoing capacity utilization and capital expenditure plans."
-    )
+    grounded_context = "\n".join([f"[{c.source}] {c.title}: {c.snippet}" for c in citations])
+    llm_prompt = f"Grounded Context:\n{grounded_context}\n\nUser Question: {clean_q}\n\nSynthesize an objective analysis citing the sources above."
+    live_answer = call_live_llm(llm_prompt)
+    if live_answer:
+        answer = live_answer
+    else:
+        answer = (
+            f"Based on recent reporting from {top_c.source} (\"{top_c.title}\"): "
+            f"{top_c.snippet} "
+            f"Market participants are evaluating ongoing capacity utilization and capital expenditure plans."
+        )
 
     return AIResearchResponse(
         query=clean_q,

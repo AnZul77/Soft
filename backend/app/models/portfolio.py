@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime, timezone
 import enum
-from sqlalchemy import Column, String, Float, DateTime, ForeignKey, Enum as SQLEnum
+from sqlalchemy import Column, String, Float, DateTime, ForeignKey, Boolean, Enum as SQLEnum
 from sqlalchemy.orm import relationship
 from app.database import Base
 
@@ -19,14 +19,15 @@ class Portfolio(Base):
     base_currency = Column(String(3), nullable=False, default="USD")
     virtual_cash_balance = Column(Float, nullable=False, default=100000.00)
     reserved_cash = Column(Float, nullable=False, default=0.00)
+    is_active = Column(Boolean, default=True, nullable=False)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
     # Relationships
     user = relationship("User", back_populates="portfolios")
     holdings = relationship("Holding", back_populates="portfolio", cascade="all, delete-orphan")
-    orders = relationship("TradeOrder", back_populates="portfolio", cascade="all, delete-orphan")
-    cash_transactions = relationship("CashTransaction", back_populates="portfolio", cascade="all, delete-orphan")
+    orders = relationship("TradeOrder", back_populates="portfolio")
+    cash_transactions = relationship("CashTransaction", back_populates="portfolio")
 
 class Holding(Base):
     __tablename__ = "holdings"
@@ -45,7 +46,7 @@ class CashTransaction(Base):
     __tablename__ = "cash_transactions"
 
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    portfolio_id = Column(String(36), ForeignKey("portfolios.id", ondelete="CASCADE"), nullable=False, index=True)
+    portfolio_id = Column(String(36), ForeignKey("portfolios.id", ondelete="SET NULL"), nullable=True, index=True)
     order_id = Column(String(36), ForeignKey("trade_orders.id", ondelete="SET NULL"), nullable=True)
     amount = Column(Float, nullable=False) # Positive for deposits/sales, negative for purchases
     balance_after = Column(Float, nullable=False)

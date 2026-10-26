@@ -1,4 +1,8 @@
-const API_BASE = "http://localhost:8000/api/v1";
+const rawApiUrl = import.meta.env?.VITE_API_URL || "";
+const cleanUrl = rawApiUrl.replace(/\/+$/, '');
+const API_BASE = cleanUrl 
+  ? (cleanUrl.endsWith('/api/v1') ? cleanUrl : `${cleanUrl}/api/v1`)
+  : "/api/v1";
 
 let authToken = localStorage.getItem("apex_token") || "";
 
@@ -54,11 +58,18 @@ export const api = {
     request("/auth/login-json", { method: "POST", body: JSON.stringify({ email, password }) }),
   getMe: () => request("/auth/me"),
 
+  getProfile: () => request("/auth/profile"),
+  updateProfile: (profileData) =>
+    request("/auth/profile", { method: "PUT", body: JSON.stringify(profileData) }),
+  getAuditLogs: (limit = 50) => request(`/auth/audit-logs?limit=${limit}`),
+
   // Portfolios
   getPortfolios: () => request("/portfolios/"),
   getPortfolio: (id) => request(`/portfolios/${id}`),
   createPortfolio: (name, type = "VIRTUAL_TRADING", initial_cash = 100000) =>
     request("/portfolios/", { method: "POST", body: JSON.stringify({ name, type, initial_cash }) }),
+  updatePortfolio: (id, data) =>
+    request(`/portfolios/${id}`, { method: "PUT", body: JSON.stringify(data) }),
   deletePortfolio: (id) => request(`/portfolios/${id}`, { method: "DELETE" }),
   getValuation: (id) => request(`/portfolios/${id}/valuation`),
   addManualHolding: (portfolioId, ticker, quantity, cost_basis) =>
@@ -89,6 +100,8 @@ export const api = {
   // Market
   getQuotes: () => request("/market/quotes"),
   getSingleQuote: (ticker) => request(`/market/quotes/${ticker}`),
+  getPriceHistory: (ticker, period = "30d") =>
+    request(`/market/history/${ticker}?period=${period}`),
   injectAnomaly: (ticker, price_change_pct, headline, content) =>
     request("/market/anomalies/inject", {
       method: "POST",
@@ -96,11 +109,35 @@ export const api = {
     }),
   getNews: () => request("/market/news"),
 
+  // Watchlists (FR-07)
+  getWatchlists: () => request("/watchlists/"),
+  getWatchlist: (id) => request(`/watchlists/${id}`),
+  createWatchlist: (name, description) =>
+    request("/watchlists/", { method: "POST", body: JSON.stringify({ name, description }) }),
+  updateWatchlist: (id, data) =>
+    request(`/watchlists/${id}`, { method: "PUT", body: JSON.stringify(data) }),
+  deleteWatchlist: (id) => request(`/watchlists/${id}`, { method: "DELETE" }),
+  addWatchlistItem: (watchlistId, ticker, notes, target_price) =>
+    request(`/watchlists/${watchlistId}/items`, {
+      method: "POST",
+      body: JSON.stringify({ ticker, notes, target_price })
+    }),
+  removeWatchlistItem: (watchlistId, itemId) =>
+    request(`/watchlists/${watchlistId}/items/${itemId}`, { method: "DELETE" }),
+
   // Risk & Anomalies
   getPortfolioRisk: (portfolioId) => request(`/risk-anomalies/portfolios/${portfolioId}/risk`),
   runAnomalyScan: () => request("/risk-anomalies/anomalies/scan", { method: "POST" }),
   getAlerts: () => request("/risk-anomalies/alerts"),
   markAlertRead: (alertId) => request(`/risk-anomalies/alerts/${alertId}/read`, { method: "PUT" }),
+
+  // Alert Rules (FR-18)
+  getAlertRules: () => request("/alerts/rules"),
+  createAlertRule: (ruleData) =>
+    request("/alerts/rules", { method: "POST", body: JSON.stringify(ruleData) }),
+  updateAlertRule: (ruleId, ruleData) =>
+    request(`/alerts/rules/${ruleId}`, { method: "PUT", body: JSON.stringify(ruleData) }),
+  deleteAlertRule: (ruleId) => request(`/alerts/rules/${ruleId}`, { method: "DELETE" }),
 
   // AI & RAG
   explainImpact: (portfolioId, ticker, event_description, price_change_pct) =>
@@ -161,10 +198,16 @@ export const api = {
   researchQuery: (query, ticker, limit = 5) =>
     request("/ai/research", { method: "POST", body: JSON.stringify({ query, ticker, limit }) }),
 
-  // Journal
-  getJournalEntries: () => request("/journal/"),
+  // Journal (FR-22)
+  getJournalEntries: (is_archived) => {
+    const q = is_archived !== undefined ? `?is_archived=${is_archived}` : '';
+    return request(`/journal/${q}`);
+  },
   createJournalEntry: (entryData) =>
     request("/journal/", { method: "POST", body: JSON.stringify(entryData) }),
+  updateJournalEntry: (id, entryData) =>
+    request(`/journal/${id}`, { method: "PUT", body: JSON.stringify(entryData) }),
+  archiveJournalEntry: (id) => request(`/journal/${id}/archive`, { method: "PUT" }),
   deleteJournalEntry: (id) => request(`/journal/${id}`, { method: "DELETE" }),
   reflectOnThesis: (entryId) =>
     request(`/journal/${entryId}/reflect`, { method: "POST" })

@@ -7,7 +7,8 @@ import {
   Sparkles, 
   Radio, 
   ExternalLink,
-  Flame
+  Flame,
+  BarChart2
 } from 'lucide-react';
 import { api } from '../api';
 
@@ -16,7 +17,8 @@ export default function MarketWatch({
   news, 
   onAnomalyInjected, 
   onExplainTicker, 
-  onTradeTicker 
+  onTradeTicker,
+  onViewChart 
 }) {
   const [injectTicker, setInjectTicker] = useState("TSMC");
   const [injectPct, setInjectPct] = useState("-0.085");
@@ -157,7 +159,17 @@ export default function MarketWatch({
                 </div>
 
                 {/* Actions on hover */}
-                <div className="mt-4 pt-3 border-t border-zinc-800/60 flex items-center justify-between gap-2">
+                <div className="mt-4 pt-3 border-t border-zinc-800/60 flex items-center justify-between gap-1.5">
+                  {onViewChart && (
+                    <button
+                      onClick={() => onViewChart(q.ticker)}
+                      title="View Interactive Price Chart"
+                      className="flex-1 py-1 px-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 border border-zinc-700/60 text-zinc-300 text-[11px] font-semibold transition flex items-center justify-center gap-1"
+                    >
+                      <BarChart2 className="w-3 h-3 text-cyan-400" />
+                      Chart
+                    </button>
+                  )}
                   <button
                     onClick={() => onExplainTicker(q.ticker)}
                     className="flex-1 py-1 px-2 rounded-lg bg-indigo-950/60 hover:bg-indigo-900/80 border border-indigo-700/50 text-indigo-300 text-[11px] font-semibold transition flex items-center justify-center gap-1"

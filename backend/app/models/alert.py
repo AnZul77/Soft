@@ -21,6 +21,8 @@ class AlertRule(Base):
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
+    user = relationship("User", back_populates="alert_rules")
+
 class AlertNotification(Base):
     __tablename__ = "alert_notifications"
 

@@ -1,6 +1,6 @@
 from app.schemas.user import UserCreate, UserLogin, UserResponse, Token, TokenData
 from app.schemas.portfolio import (
-    PortfolioCreate, PortfolioResponse, HoldingCreate, HoldingUpdate,
+    PortfolioCreate, PortfolioUpdate, PortfolioResponse, HoldingCreate, HoldingUpdate,
     HoldingResponse, ValuationHolding, PortfolioValuation
 )
 from app.schemas.order import OrderCreate, OrderResponse, CashTransactionResponse

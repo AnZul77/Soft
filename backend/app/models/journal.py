@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime, timezone
-from sqlalchemy import Column, String, Float, DateTime, Text, ForeignKey, Integer
+from sqlalchemy import Column, String, Float, DateTime, Text, ForeignKey, Integer, Boolean
 from sqlalchemy.orm import relationship
 from app.database import Base
 
@@ -18,6 +18,7 @@ class InvestmentJournalEntry(Base):
     confidence_rating = Column(Integer, default=3) # 1 to 5
     review_date = Column(DateTime, nullable=True)
     ai_reflection = Column(Text, nullable=True)
+    is_archived = Column(Boolean, default=False, nullable=False)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 

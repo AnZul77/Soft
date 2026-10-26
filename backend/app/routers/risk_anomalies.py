@@ -23,7 +23,10 @@ def get_portfolio_risk(
     return risk_engine.calculate_risk_metrics(db, portfolio_id)
 
 @router.post("/anomalies/scan", response_model=List[AlertNotificationResponse])
-def run_anomaly_scan(db: Session = Depends(get_db)):
+def run_anomaly_scan(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
     """Triggers the background anomaly scan over consolidated asset watcher queue."""
     alerts = anomaly_scanner.scan_for_anomalies(db, threshold_pct=0.08)
     return alerts
