@@ -15,28 +15,31 @@ export default function AnomalyAlertsFeed({
 }) {
   if (alerts.length === 0) {
     return (
-      <div className="text-center py-12 bg-zinc-900/40 border border-zinc-800 rounded-2xl">
-        <div className="w-10 h-10 rounded-xl bg-zinc-800 flex items-center justify-center mx-auto text-zinc-500 mb-2">
-          <Bell className="w-5 h-5" />
+      <div className="text-center py-10 bg-[#10141d] border border-[#1e2638] rounded-2xl">
+        <div className="w-10 h-10 rounded-xl bg-[#141925] border border-slate-800 flex items-center justify-center mx-auto text-slate-500 mb-2">
+          <Bell className="w-5 h-5 text-slate-400" />
         </div>
-        <p className="text-zinc-400 text-xs">No active anomaly alerts. Use the Market Sandbox to simulate an event.</p>
+        <h4 className="text-xs font-semibold text-slate-300">No Active Anomaly Alerts</h4>
+        <p className="text-[11px] text-slate-500 max-w-sm mx-auto mt-1">
+          Market watcher is monitoring holdings. When a price shock (exceeding 8%) occurs, explainable alerts appear here.
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="bg-zinc-900/60 border border-zinc-800 rounded-2xl overflow-hidden shadow-sm">
-      <div className="px-6 py-4 border-b border-zinc-800 flex items-center justify-between">
+    <div className="bg-[#10141d] border border-[#1e2638] rounded-2xl overflow-hidden shadow-sm">
+      <div className="px-6 py-4 border-b border-[#1e2638] flex items-center justify-between bg-[#0c1017]/50">
         <div className="flex items-center gap-2">
           <div className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
           <h3 className="text-sm font-bold text-white uppercase tracking-wider">In-App Notification Center</h3>
         </div>
-        <span className="text-xs font-mono text-zinc-400">
+        <span className="text-xs font-mono text-slate-400">
           {alerts.filter(a => a.status !== 'READ').length} Unread Alerts
         </span>
       </div>
 
-      <div className="divide-y divide-zinc-800/60">
+      <div className="divide-y divide-[#1e2638]/60">
         {alerts.map((a) => {
           const isUnread = a.status !== 'READ';
           const isDrop = a.event_type === 'PRICE_DROP';

@@ -348,7 +348,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100 flex flex-col">
+    <div className="min-h-screen bg-[#090c10] text-slate-100 flex flex-col ambient-glow">
       {/* Navbar */}
       <Navbar
         user={user}
@@ -362,6 +362,7 @@ export default function App() {
         onOpenProfile={() => setIsProfileOpen(true)}
         onOpenAIResearch={() => setIsAIResearchOpen(true)}
         onOpenAlertRules={() => setIsAlertRulesOpen(true)}
+        unreadAlertCount={alerts.filter(a => a.status !== 'READ').length}
       />
 
       {/* Main Container */}

@@ -1,23 +1,25 @@
 import React from 'react';
 import { 
   TrendingUp, 
-  ShieldCheck, 
   Layers, 
   Activity, 
   BookOpen, 
   BarChart3, 
-  PlusCircle, 
+  Plus, 
   LogOut,
   Sparkles,
   Bookmark,
   Bell,
   Bot,
-  User
+  User,
+  ChevronDown,
+  ShieldCheck,
+  Wallet
 } from 'lucide-react';
 
 export default function Navbar({ 
   user, 
-  portfolios, 
+  portfolios = [], 
   activePortfolio, 
   onSelectPortfolio, 
   onOpenCreatePortfolio, 
@@ -26,35 +28,45 @@ export default function Navbar({
   onLogout,
   onOpenProfile,
   onOpenAIResearch,
-  onOpenAlertRules
+  onOpenAlertRules,
+  unreadAlertCount = 0
 }) {
+  const isVirtual = activePortfolio?.type === 'VIRTUAL_TRADING';
+  const userInitials = (user?.full_name || user?.email || 'U')
+    .split(' ')
+    .map(n => n[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
+
   return (
-    <header className="border-b border-zinc-800 bg-zinc-950/80 backdrop-blur-md sticky top-0 z-40">
+    <header className="border-b border-[#1c2333] bg-[#090c10]/90 backdrop-blur-xl sticky top-0 z-40 transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          {/* Brand */}
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-cyan-400 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+        <div className="flex items-center justify-between h-16 gap-4">
+          
+          {/* Brand Identity */}
+          <div className="flex items-center gap-3 shrink-0">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-cyan-400 flex items-center justify-center shadow-lg shadow-indigo-500/25 ring-1 ring-white/20">
               <Sparkles className="w-5 h-5 text-white" />
             </div>
-            <div>
-              <span className="font-extrabold text-base tracking-tight bg-gradient-to-r from-white via-zinc-200 to-zinc-400 bg-clip-text text-transparent">
-                APEX INTELLIGENCE
+            <div className="flex items-center gap-2">
+              <span className="font-extrabold text-sm sm:text-base tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent">
+                APEX <span className="font-light text-slate-400">INTELLIGENCE</span>
               </span>
-              <span className="ml-2 text-[10px] font-mono uppercase px-1.5 py-0.5 rounded bg-indigo-950/60 border border-indigo-700/50 text-indigo-300">
+              <span className="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-indigo-500/10 border border-indigo-500/30 text-indigo-300">
                 v1.0 RAG
               </span>
             </div>
           </div>
 
-          {/* Navigation Links */}
-          <nav className="hidden md:flex items-center gap-1 bg-zinc-900/60 p-1 rounded-xl border border-zinc-800/80">
+          {/* Center Navigation Bar (Segmented Control) */}
+          <nav className="hidden lg:flex items-center gap-1 bg-[#121622]/90 p-1 rounded-xl border border-slate-800 shadow-inner">
             <button
               onClick={() => setActiveTab('overview')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5 ${
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
                 activeTab === 'overview'
-                  ? 'bg-zinc-800 text-white shadow-sm'
-                  : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/40'
+                  ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
+                  : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/50'
               }`}
             >
               <Layers className="w-3.5 h-3.5" />
@@ -62,10 +74,10 @@ export default function Navbar({
             </button>
             <button
               onClick={() => setActiveTab('trading')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5 ${
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
                 activeTab === 'trading'
-                  ? 'bg-zinc-800 text-white shadow-sm'
-                  : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/40'
+                  ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
+                  : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/50'
               }`}
             >
               <TrendingUp className="w-3.5 h-3.5" />
@@ -73,10 +85,10 @@ export default function Navbar({
             </button>
             <button
               onClick={() => setActiveTab('watchlists')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5 ${
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
                 activeTab === 'watchlists'
-                  ? 'bg-zinc-800 text-white shadow-sm'
-                  : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/40'
+                  ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
+                  : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/50'
               }`}
             >
               <Bookmark className="w-3.5 h-3.5" />
@@ -84,21 +96,21 @@ export default function Navbar({
             </button>
             <button
               onClick={() => setActiveTab('market')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5 ${
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
                 activeTab === 'market'
-                  ? 'bg-zinc-800 text-white shadow-sm'
-                  : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/40'
+                  ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
+                  : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/50'
               }`}
             >
               <Activity className="w-3.5 h-3.5" />
-              Market & Anomalies
+              Market & Anomaly
             </button>
             <button
               onClick={() => setActiveTab('risk')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5 ${
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
                 activeTab === 'risk'
-                  ? 'bg-zinc-800 text-white shadow-sm'
-                  : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/40'
+                  ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
+                  : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/50'
               }`}
             >
               <BarChart3 className="w-3.5 h-3.5" />
@@ -106,10 +118,10 @@ export default function Navbar({
             </button>
             <button
               onClick={() => setActiveTab('journal')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5 ${
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
                 activeTab === 'journal'
-                  ? 'bg-zinc-800 text-white shadow-sm'
-                  : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/40'
+                  ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
+                  : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/50'
               }`}
             >
               <BookOpen className="w-3.5 h-3.5" />
@@ -117,90 +129,119 @@ export default function Navbar({
             </button>
           </nav>
 
-          {/* Right Controls */}
-          <div className="flex items-center gap-3">
-            {/* AI Research Button */}
+          {/* Right Control Toolbar */}
+          <div className="flex items-center gap-2.5 shrink-0">
+            {/* AI Research Copilot Button */}
             {onOpenAIResearch && (
               <button
                 onClick={onOpenAIResearch}
-                title="AI Research Assistant (FR-16)"
-                className="px-2.5 py-1.5 rounded-lg bg-indigo-950/60 hover:bg-indigo-900/80 border border-indigo-700/60 text-indigo-300 text-xs font-semibold flex items-center gap-1.5 transition"
+                title="Open AI Research Copilot (FR-16)"
+                className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-indigo-500/15 to-cyan-500/15 hover:from-indigo-500/25 hover:to-cyan-500/25 border border-indigo-500/40 text-indigo-300 text-xs font-semibold flex items-center gap-1.5 transition-all shadow-sm"
               >
-                <Bot className="w-3.5 h-3.5 text-indigo-400" />
-                <span className="hidden xl:inline">AI Research</span>
+                <Bot className="w-4 h-4 text-cyan-400" />
+                <span className="hidden sm:inline">AI Research</span>
               </button>
             )}
 
-            {/* Alert Rules Button */}
+            {/* Alert Rules & Notifications */}
             {onOpenAlertRules && (
               <button
                 onClick={onOpenAlertRules}
-                title="Alert Rule Configurations (FR-18)"
-                className="p-1.5 text-zinc-400 hover:text-amber-400 hover:bg-zinc-800 rounded-lg transition"
+                title="Anomaly Alert Rules (FR-18)"
+                className="p-2 text-slate-400 hover:text-amber-400 hover:bg-slate-800/80 rounded-xl transition relative border border-transparent hover:border-slate-700/60"
               >
                 <Bell className="w-4 h-4" />
+                {unreadAlertCount > 0 && (
+                  <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-amber-400 ring-2 ring-[#090c10]" />
+                )}
               </button>
             )}
 
-            {/* Portfolio Selector */}
+            {/* Portfolio Selector & Status Pill */}
             {portfolios.length > 0 && (
-              <div className="flex items-center gap-2">
-                <select
-                  value={activePortfolio?.id || ''}
-                  onChange={(e) => {
-                    const selected = portfolios.find(p => p.id === e.target.value);
-                    if (selected) onSelectPortfolio(selected);
-                  }}
-                  className="bg-zinc-900 border border-zinc-700/80 text-xs font-medium rounded-lg px-2.5 py-1.5 text-zinc-200 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                >
-                  {portfolios.map(p => (
-                    <option key={p.id} value={p.id}>
-                      {p.name} ({p.type === 'VIRTUAL_TRADING' ? 'Paper' : 'Watch'})
-                    </option>
-                  ))}
-                </select>
+              <div className="flex items-center gap-1.5 bg-[#121622] border border-slate-800 rounded-xl p-1">
+                <div className="flex items-center gap-1.5 pl-2 pr-1">
+                  <span className={`w-2 h-2 rounded-full ${isVirtual ? 'bg-emerald-400 shadow-sm shadow-emerald-400/50' : 'bg-cyan-400 shadow-sm shadow-cyan-400/50'}`} />
+                  <select
+                    value={activePortfolio?.id || ''}
+                    onChange={(e) => {
+                      const selected = portfolios.find(p => p.id === e.target.value);
+                      if (selected) onSelectPortfolio(selected);
+                    }}
+                    className="bg-transparent text-xs font-semibold text-slate-200 focus:outline-none cursor-pointer max-w-[130px] sm:max-w-[160px] truncate"
+                  >
+                    {portfolios.map(p => (
+                      <option key={p.id} value={p.id} className="bg-[#10141d] text-slate-200">
+                        {p.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-                {activePortfolio && (
-                  <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full uppercase border font-semibold ${
-                    activePortfolio.type === 'VIRTUAL_TRADING'
-                      ? 'bg-emerald-950/60 border-emerald-700 text-emerald-400'
-                      : 'bg-blue-950/60 border-blue-700 text-blue-400'
-                  }`}>
-                    {activePortfolio.type === 'VIRTUAL_TRADING' ? 'Simulated Ledger' : 'External Watch'}
-                  </span>
-                )}
+                <button
+                  onClick={onOpenCreatePortfolio}
+                  title="Create New Portfolio"
+                  className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                </button>
               </div>
             )}
 
-            <button
-              onClick={onOpenCreatePortfolio}
-              title="Create Portfolio"
-              className="p-1.5 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg transition"
-            >
-              <PlusCircle className="w-4 h-4" />
-            </button>
-
-            {/* User Profile & Logout */}
-            <div className="flex items-center gap-2 pl-2 border-l border-zinc-800">
+            {/* User Profile Pill & Sign Out */}
+            <div className="flex items-center gap-1.5 pl-2 border-l border-slate-800">
               <button
                 onClick={onOpenProfile}
                 title="Profile & Risk Preferences (FR-02/11/25)"
-                className="flex items-center gap-1.5 text-xs text-zinc-300 hover:text-white hover:bg-zinc-800 px-2 py-1 rounded-lg transition"
+                className="flex items-center gap-2 text-xs font-medium text-slate-200 hover:text-white bg-[#121622] hover:bg-slate-800/80 border border-slate-800 px-2.5 py-1.5 rounded-xl transition"
               >
-                <User className="w-3.5 h-3.5 text-zinc-400" />
-                <span className="hidden sm:inline-block max-w-[120px] truncate">
-                  {user?.full_name || user?.email}
+                <div className="w-5 h-5 rounded-full bg-indigo-600/80 text-white text-[10px] font-bold flex items-center justify-center">
+                  {userInitials}
+                </div>
+                <span className="hidden xl:inline-block max-w-[100px] truncate">
+                  {user?.full_name || user?.email?.split('@')[0]}
                 </span>
               </button>
+
               <button
                 onClick={onLogout}
-                title="Sign out"
-                className="p-1.5 text-zinc-400 hover:text-rose-400 hover:bg-zinc-800 rounded-lg transition"
+                title="Sign out of platform"
+                className="p-2 text-slate-400 hover:text-rose-400 hover:bg-slate-800/80 rounded-xl transition border border-transparent hover:border-slate-700/60"
               >
                 <LogOut className="w-4 h-4" />
               </button>
             </div>
           </div>
+
+        </div>
+
+        {/* Mobile Navigation Sub-bar */}
+        <div className="lg:hidden flex items-center justify-between overflow-x-auto py-2 border-t border-slate-800/80 gap-1 no-scrollbar">
+          {[
+            { id: 'overview', label: 'Overview', icon: Layers },
+            { id: 'trading', label: 'Trade Desk', icon: TrendingUp },
+            { id: 'watchlists', label: 'Watchlists', icon: Bookmark },
+            { id: 'market', label: 'Market', icon: Activity },
+            { id: 'risk', label: 'Risk', icon: BarChart3 },
+            { id: 'journal', label: 'Journal', icon: BookOpen },
+          ].map(tab => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap flex items-center gap-1.5 transition-all ${
+                  isActive
+                    ? 'bg-indigo-600 text-white shadow-sm'
+                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40'
+                }`}
+              >
+                <Icon className="w-3.5 h-3.5" />
+                {tab.label}
+              </button>
+            );
+          })}
         </div>
       </div>
     </header>
