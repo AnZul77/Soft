@@ -1,5 +1,10 @@
 import os
+from pathlib import Path
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+BACKEND_DIR = Path(__file__).resolve().parent.parent
+DEFAULT_DB_FILE = (BACKEND_DIR / "investment_intelligence.db").resolve()
+DEFAULT_SQLITE_URL = f"sqlite:///{DEFAULT_DB_FILE.as_posix()}"
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "AI-Powered Investment Intelligence Platform"
@@ -10,8 +15,8 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 # 24 hours
     
-    # SQLite default for out-of-the-box local execution, or PostgreSQL if configured
-    DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./investment_intelligence.db")
+    # SQLite absolute path for out-of-the-box local execution, or PostgreSQL if configured
+    DATABASE_URL: str = os.getenv("DATABASE_URL", DEFAULT_SQLITE_URL)
     
     # Market Data
     DEFAULT_BENCHMARK_TICKER: str = "SPY"

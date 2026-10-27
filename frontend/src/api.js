@@ -35,10 +35,23 @@ const request = async (endpoint, options = {}) => {
   if (!response.ok) {
     let errorDetail = "An unexpected error occurred";
     try {
-      const errJson = await response.json();
-      errorDetail = errJson.detail || JSON.stringify(errJson);
+      const text = await response.text();
+      try {
+        const errJson = JSON.parse(text);
+        if (typeof errJson.detail === "string") {
+          errorDetail = errJson.detail;
+        } else if (Array.isArray(errJson.detail)) {
+          errorDetail = errJson.detail.map((e) => e.msg || e.message || JSON.stringify(e)).join(", ");
+        } else if (errJson.detail) {
+          errorDetail = JSON.stringify(errJson.detail);
+        } else {
+          errorDetail = text;
+        }
+      } catch {
+        errorDetail = text || response.statusText || "An unexpected error occurred";
+      }
     } catch {
-      errorDetail = await response.text();
+      errorDetail = response.statusText || "An unexpected error occurred";
     }
     throw new Error(errorDetail);
   }

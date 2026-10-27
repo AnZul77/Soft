@@ -1,10 +1,18 @@
+import sys
+from pathlib import Path
+
+# Ensure 'backend' directory is always in sys.path regardless of execution context or working directory
+backend_dir = Path(__file__).resolve().parent.parent
+if str(backend_dir) not in sys.path:
+    sys.path.insert(0, str(backend_dir))
+
 import asyncio
 import logging
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
-from app.database import engine, Base, SessionLocal
+from app.database import engine, Base, SessionLocal, ensure_sqlite_migrations
 from app.models import * # Load all models
 from app.routers import auth, portfolios, trading, market, risk_anomalies, ai_research, journal, watchlists, alerts
 from app.services.market_data import market_data_provider
@@ -37,8 +45,9 @@ async def run_periodic_background_tasks(interval_seconds: int = 60):
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup: Create tables and seed data
+    # Startup: Create tables, apply SQLite schema migrations, and seed data
     Base.metadata.create_all(bind=engine)
+    ensure_sqlite_migrations(engine)
     db = SessionLocal()
     try:
         market_data_provider.sync_to_db(db)
@@ -98,3 +107,8 @@ def health_check():
         "market_cache": "warm",
         "version": settings.VERSION
     }
+
+if __name__ == "__main__":
+    import uvicorn
+    print(f"Starting {settings.PROJECT_NAME} v{settings.VERSION} on http://127.0.0.1:8000 ...")
+    uvicorn.run("app.main:app", host="127.0.0.1", port=8000, reload=True)

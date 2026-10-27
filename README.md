@@ -33,24 +33,30 @@ The system is architected across functional divisions solving the 7 critical par
 
 ---
 
-## 3. Quick Start Guide
+## 3. Quick Start & Live Demonstration Guide
 
-### Backend Setup & Test Execution
-```bash
-cd backend
+### Option A: One-Click Startup (Root Workspace)
+You can run the backend and both test suites directly from the project root:
 
-# Install dependencies
-python -m pip install -r requirements.txt
+```powershell
+# 1. Start the Backend API (http://127.0.0.1:8000)
+python run_backend.py        # or run .\start_backend.ps1 / start_backend.bat
 
-# Run full test suite (29 tests)
-python -m pytest -v
+# 2. Run Automated Pytest Suite (All 29 tests with formatted audit report)
+python run_automated_tests.py # or run .\run_tests.ps1 / run_tests.bat
 
-# Run the backend API server (http://localhost:8000)
-uvicorn app.main:app --reload --port 8000
+# 3. Run Interactive Manual Live Testing (Live demonstration harness)
+python test_manual_live.py    # or run .\test_manual_live.ps1 / test_manual_live.bat
+# Supports:
+#   --step : Pauses at each step with colored payload explanations
+#   --auto : Runs all 13 core workflows in ~8 seconds
 ```
-API Documentation is available at: `http://localhost:8000/docs`
 
-### Frontend Setup
+API Documentation: `http://127.0.0.1:8000/docs` (Swagger UI) and `/health`
+
+---
+
+### Option B: Frontend Setup
 ```bash
 cd frontend
 
@@ -64,7 +70,9 @@ npm run dev
 npm run build
 ```
 
-### Full Stack Docker Deployment
+---
+
+### Option C: Full Stack Docker Deployment
 ```bash
 docker-compose up --build
 ```
