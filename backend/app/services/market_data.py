@@ -97,7 +97,10 @@ class MarketDataProvider:
         if ticker in self._quote_cache:
             data = self._quote_cache[ticker]
             # Check TTL
-            if (now - data["last_updated"]).total_seconds() > self._cache_ttl_seconds:
+            last_up = data["last_updated"]
+            if getattr(last_up, "tzinfo", None) is None:
+                last_up = last_up.replace(tzinfo=timezone.utc)
+            if (now - last_up).total_seconds() > self._cache_ttl_seconds:
                 # Add minor realistic jitter
                 jitter = random.uniform(-0.002, 0.002)
                 data["price"] = round(data["price"] * (1 + jitter), 2)
@@ -110,6 +113,9 @@ class MarketDataProvider:
         if db:
             db_quote = db.query(QuoteCache).filter(QuoteCache.ticker == ticker).first()
             if db_quote:
+                lu = db_quote.last_updated
+                if getattr(lu, "tzinfo", None) is None:
+                    lu = lu.replace(tzinfo=timezone.utc)
                 quote_dict = {
                     "ticker": db_quote.ticker,
                     "price": db_quote.price,
@@ -119,7 +125,7 @@ class MarketDataProvider:
                     "low_24h": db_quote.low_24h,
                     "volume": db_quote.volume,
                     "previous_close": db_quote.previous_close,
-                    "last_updated": db_quote.last_updated,
+                    "last_updated": lu,
                     "is_stale": True,
                     "source": "DB_CACHE"
                 }
